@@ -1,0 +1,3 @@
+COMPONENT=SendingAppC
+SENSORBOARD=mts300
+include $(MAKERULES)

@@ -1,0 +1,78 @@
+
+/**
+ * The application SendingAppC only sends the message. 
+ * Every 2 sec, it sends a message to a specific node or broadcast 
+ * When the application sends a message, Led0 toggles. 
+ * Packet's name is RadyoMsg.
+ * @author Senol Zafer Erdogan
+ * @date   January 25 2010
+ */
+
+
+#include "Timer.h"
+#include "Sending.h"
+#include "mts300.h"
+
+module SendingC {
+  uses {
+    interface Leds;
+    interface Boot;
+    interface AMSend;
+    interface AMPacket;
+    interface Timer<TMilli> as Timer0;
+    interface SplitControl as AMControl;
+    interface Packet;
+    interface Read<uint16_t> as AccelX;
+    interface Read<uint16_t> as AccelY;
+  }
+}
+implementation {
+
+  
+  message_t pkt;
+  bool busy= FALSE;
+  RadyoMsg* btrpkt= NULL; 
+  event void Boot.booted() {
+    call AMControl.start();
+  }
+
+  event void AMControl.startDone(error_t err) {
+    if (err == SUCCESS) {
+      call Timer0.startPeriodic(200);
+    }
+    else {
+      call AMControl.start();
+    }
+  }
+
+  event void AMControl.stopDone(error_t err) {
+    // do nothing
+  }
+  
+  event void Timer0.fired() {
+	  call AccelX.read();
+	  call AccelY.read();
+	if (btrpkt->AX!=0 && btrpkt->AY!=0 ) {
+	  btrpkt = (RadyoMsg*)(call Packet.getPayload(&pkt, NULL));
+	  if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(RadyoMsg)) == SUCCESS) {
+		call Leds.led0Toggle();
+	  }
+	}
+  }
+
+  event void AMSend.sendDone(message_t* bufPtr, error_t error) {
+	btrpkt->AX= 0;
+	btrpkt->AY= 0;
+    call Leds.led1Toggle();
+  }
+
+  event void AccelX.readDone(error_t error, uint16_t data) {
+    btrpkt->AX = data;
+  }
+
+  event void AccelY.readDone(error_t error, uint16_t data) {
+    btrpkt->AY = data;
+  }
+
+}
+

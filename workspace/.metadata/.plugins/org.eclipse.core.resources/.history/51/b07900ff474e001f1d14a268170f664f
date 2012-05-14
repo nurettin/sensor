@@ -1,0 +1,22 @@
+/**
+ * RadyoMsg is the message's name. 
+ * it has 2 fields which are counter and nodeid. 
+ * @author Senol Zafer Erdogan
+ * @date   January 5 2010
+ */
+
+
+#ifndef RECEIVING_H
+#define RECEIVING_H
+
+enum {
+  AM_RECEIVER = 6,
+  TIMER_PERIOD_MILLI = 2000
+};
+
+typedef nx_struct RadyoMsg{
+  nx_uint16_t nodeid;
+  nx_uint16_t counter;
+} RadyoMsg;
+
+#endif
